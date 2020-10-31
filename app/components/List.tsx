@@ -1,7 +1,8 @@
 import React from 'react'
-import { FlatList, Image } from 'react-native'
+import { FlatList, Text, ImageStyle, TextStyle, ViewStyle, TouchableOpacity, ImageBackground, Dimensions } from 'react-native'
 import { fetchAudios } from '../utils'
-import AudioCard from './AudioCard'
+import Player from './Player'
+import Header from './Header'
 import { Typography } from '../theme'
 interface ListProps {
 }
@@ -17,35 +18,68 @@ interface AudioType {
 class List extends React.Component<ListProps, ListState> {
     state = {
         audios: [],
-        selectedAudioId: null
+        selectedAudioId: ''
     }
     componentDidMount() {
-        this.setAudios()
+        this.fetchAudios()
     }
-    setAudios = async () => {
+    fetchAudios = async () => {
         const audios = await fetchAudios()
         this.setState({ audios })
     }
-    renderItem = ({item: audio}) => {
-        return (
-            <Image
-                source={{uri: audio.imgUrl}}
-                style={{ width: 200, height: 300, backgroundColor: 'red' }}
-            />
-        )
+    setAudio = selectedAudioId => e => {
+        this.setState({ selectedAudioId })
     }
+    renderItem = ({ item: audio }) => (
+        <TouchableOpacity onPress={this.setAudio(audio.id)} style={styles.cardContainer}>
+            <ImageBackground
+                source={{ uri: audio.imgUrl }}
+                style={styles.imageStyle}
+            >
+                <Text style={styles.title}>{audio.title}</Text>
+            </ImageBackground>
+        </TouchableOpacity>
+    )
+    
     render() {
-        const { audios } = this.state
-        console.log('Typography', Typography.listContainer)
+        const { audios, selectedAudioId } = this.state
         return (
-            <>
+            <> 
+                <Header title='Sound Tester'/>
                 <FlatList
                     style={Typography.listContainer}
                     data={audios}
-                    renderItem={AudioCard}
+                    renderItem={this.renderItem}
                     keyExtractor={({id}) => id }/>
+                {selectedAudioId !== '' && audios[selectedAudioId] && 
+                    <Player
+                        audio={audios[selectedAudioId]}
+                        setAudio={this.setAudio} />}
             </>
         )
     }
 }
 export default List
+    
+const { width } = Dimensions.get('window')
+interface CardStyle {
+    cardContainer: ViewStyle
+    imageStyle: ImageStyle
+    title: TextStyle
+}
+const styles: CardStyle = {
+    cardContainer: {
+        width: width - 20,
+        alignSelf: 'center'
+    },
+    imageStyle: {
+        flex: 1,
+        height: 200,
+        margin: 10,
+
+    },
+    title: {
+        ...Typography.title,
+        ...Typography.textShadow,
+    }
+}
