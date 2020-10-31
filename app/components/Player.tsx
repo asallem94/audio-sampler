@@ -54,6 +54,7 @@ class Player extends React.Component {
     onDismiss = () => {
         const { setAudio} = this.props
         setAudio('')()
+        TrackPlayer.stop();
         TrackPlayer.destroy();
     }
     render() {
