@@ -1,5 +1,5 @@
 import React from 'react'
-import { FlatList, Text, ImageStyle, TextStyle, ViewStyle, TouchableOpacity, ImageBackground, Dimensions } from 'react-native'
+import { FlatList, Text, ImageStyle, TextStyle, ViewStyle, TouchableOpacity, ImageBackground, Dimensions, View, SafeAreaView } from 'react-native'
 import { fetchAudios } from '../utils'
 import Player from './Player'
 import Header from './Header'
@@ -50,7 +50,9 @@ class List extends React.Component<ListProps, ListState> {
                     style={Typography.listContainer}
                     data={audios}
                     renderItem={this.renderItem}
-                    keyExtractor={({id}) => id }/>
+                    keyExtractor={({id}) => id }
+                    ListFooterComponent={selectedAudioId !== '' && audios[selectedAudioId] && <View style={styles.emptyPlayerContainer}/>}
+                />
                 {selectedAudioId !== '' && audios[selectedAudioId] && 
                     <Player
                         audio={audios[selectedAudioId]}
@@ -65,7 +67,8 @@ const { width } = Dimensions.get('window')
 interface CardStyle {
     cardContainer: ViewStyle
     imageStyle: ImageStyle
-    title: TextStyle
+    title: TextStyle,
+    emptyPlayerContainer: ViewStyle
 }
 const styles: CardStyle = {
     cardContainer: {
@@ -76,7 +79,9 @@ const styles: CardStyle = {
         flex: 1,
         height: 200,
         margin: 10,
-
+    },
+    emptyPlayerContainer: {
+        height: 200
     },
     title: {
         ...Typography.title,

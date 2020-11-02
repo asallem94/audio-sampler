@@ -10,8 +10,7 @@ import { Typography } from '../../theme'
 
 const { width } = Dimensions.get('window')
 
-export default function ({ progress, progressPosition, panResponder }) {
-    const ballPosition = isNaN(progressPosition / progress.duration * width * 0.9) ? -10 : (progressPosition / progress.duration * width * 0.9) - 10
+export default function ({ progress, progressPosition, ballPosition, panResponder }) {
     return (
         <View style={styles.progress}>
             <View style={{ flex: progressPosition, backgroundColor: "red" }} />
@@ -26,7 +25,7 @@ export default function ({ progress, progressPosition, panResponder }) {
                     Typography.seekBall,
                     { left: ballPosition }
                 ]}
-                // {...panResponder.panHandlers}
+                {...panResponder.panHandlers}
             />
         </View>
     );

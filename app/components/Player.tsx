@@ -1,8 +1,9 @@
 import React from 'react'
 import Controls from './controls/Controls'
-import TrackPlayer, { TrackPlayerEvents } from 'react-native-track-player';
+import TrackPlayer, { ProgressComponent, TrackPlayerEvents } from 'react-native-track-player';
+import ProgressBar from './controls/ProgressBar';
 
-class Player extends React.Component {
+class Player extends ProgressComponent {
     shouldComponentUpdate(prevProps) {
         const { audio } = this.props
         if (audio.id !== prevProps.audio.id) {
@@ -13,6 +14,15 @@ class Player extends React.Component {
     componentDidMount(){
         const { audio } = this.props
         TrackPlayer.setupPlayer().then(async (res) => {
+            await TrackPlayer.updateOptions({
+                capabilities: [
+                    TrackPlayer.CAPABILITY_PLAY,
+                    TrackPlayer.CAPABILITY_PAUSE,
+                    TrackPlayer.CAPABILITY_STOP,
+                    // TrackPlayer.CAPABILITY_JUMP_FORWARD,
+                    // TrackPlayer.CAPABILITY_JUMP_BACKWARD,
+                ]
+            })
 
             // Adds a track to the queue
             await TrackPlayer.add({
@@ -26,6 +36,28 @@ class Player extends React.Component {
             // Starts playing it
             TrackPlayer.play();
         });
+        this.remoteStopListener = TrackPlayer.addEventListener('remote-stop', () => {
+            TrackPlayer.destroy()
+        })
+        this.remotePlayListener = TrackPlayer.addEventListener('remote-play', () => {
+            TrackPlayer.play()
+        })
+        this.remotePauseListener = TrackPlayer.addEventListener('remote-pause', () => {
+            TrackPlayer.pause()
+        })
+        // this.remoteForwardListener = TrackPlayer.addEventListener('remote-jump-forward', () => {
+        //     TrackPlayer.seekTo(this.state.position + 30)
+        // })
+        // this.remoteBackwardListener = TrackPlayer.addEventListener('remote-jump-backward', () => {
+        //     TrackPlayer.seekTo(this.state.position - 30)
+        // })
+    }
+    componentWillUnmount() {
+        this.remoteStopListener.remove()
+        this.remotePlayListener.remove()
+        this.remotePauseListener.remove()
+        // this.remoteForwardListener.remove()
+        // this.remoteBackwardListener.remove()
     }
     componentDidUpdate(prevProps) {
         const { audio } = this.props

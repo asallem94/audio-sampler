@@ -9,12 +9,14 @@ import {
     StyleSheet,
     Text,
     View,
+    Dimensions,
     PanResponder,
+    Animated,
 } from "react-native";
-import {debounce} from '../../utils'
 import { Typography } from '../../theme'
 import ControlButton from './ControlButton'
 import ProgressBar from './ProgressBar'
+const { width } = Dimensions.get('window')
 
 export default function Controls(props) {
     const { onTogglePlayback, onDismiss, audio } = props;
@@ -33,7 +35,7 @@ export default function Controls(props) {
     }
     const [seeking, setSeeker] = useState(false);
     const [refresher, setRefresher] = useState(0);
-    const offset = useRef(progress.position)
+    const offset = useRef(new Animated.Value(progress.position))
     const seekTo = async (position) => {
         await setSeeker(true)
         await TrackPlayer.seekTo(position)
@@ -42,34 +44,44 @@ export default function Controls(props) {
     }
     const seekIncrement = increment => {
         if (seeking ) {
-            offset.current += increment
+            offset.current.setValue(offset.current._value + increment)
         } else {
-            seekTo(offset.current + increment)
+            offset.current.setValue(offset.current._value + increment)
+            seekTo(offset.current._value)
         }
     }
     if (!seeking) {
         if (refresher > 0) {
-            if (refresher === 1 && (offset.current - 15 > progress.position || offset.current + 15 < progress.position )) {
-                seekTo(offset.current)
+            if (refresher === 1 && (offset.current._value - 15 > progress.position || offset.current._value + 15 < progress.position )) {
+                seekTo(offset.current._value)
             }
             setRefresher(refresher - 1)
         } else {
-            offset.current = progress.position
+            offset.current.setValue( progress.position )
         }
     }
-    // const panResponder = React.useRef(
-    //     PanResponder.create({
-    //         onMoveShouldSetPanResponder: () => true,
-    //         onPanResponderGrant: () => {
-    //         },
-    //         onPanResponderMove: (_, gestureState) => {
-    //             offset.current += gestureState.dx
-    //         },
-    //         onPanResponderRelease: () => {
-                
-    //         }
-    //     })
-    // ).current;
+    const calculatedBallPosition = () => {
+        const progressPosition = seeking ? offset.current._value : progress.position 
+        let completionRatio = progress.duration === 0 ? 0 : progressPosition / progress.duration
+        completionRatio = completionRatio > 1 ? 1 : completionRatio
+        completionRatio = completionRatio < 0 ? 0 : completionRatio
+        return (completionRatio * width * 0.9) - 10
+    }
+    const panResponder = PanResponder.create({
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderGrant: async () => {
+            await setSeeker(true)
+        },
+        onPanResponderMove: (_, gestureState) => {
+            offset.current.setValue(gestureState.moveX)
+        },
+        onPanResponderRelease: async () => {
+            await TrackPlayer.seekTo(offset.current._value)
+            await setRefresher(3)
+            await setSeeker(false)
+        }
+    })
+
     if (playbackState !== TrackPlayer.STATE_NONE) {
         return (
             <ImageBackground
@@ -89,8 +101,9 @@ export default function Controls(props) {
                     </View>
                     <ProgressBar
                         progress={progress}
-                        progressPosition={pausePlayButton === 'pause' ? offset.current : progress.position}
-                        // panResponder={panResponder}
+                        progressPosition={pausePlayButton === 'pause' || seeking || refresher > 0 ? offset.current._value : progress.position}
+                        ballPosition={calculatedBallPosition()}
+                        panResponder={panResponder}
                         />
                 </View>
             </ImageBackground>
@@ -98,6 +111,8 @@ export default function Controls(props) {
     }
     return null
 }
+
+// 
 
 const styles = StyleSheet.create({
     card: {
