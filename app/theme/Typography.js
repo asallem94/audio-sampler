@@ -3,9 +3,9 @@ export const typography = {
         backgroundColor: 'white',
         borderBottomWidth: 1,
         borderColor: 'lightgray',
-        height: 70,
+        height: 80,
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'flex-end',
     },
     shadow: {
         shadowColor: "#000",

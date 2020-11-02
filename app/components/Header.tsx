@@ -1,6 +1,7 @@
 import React from "react";
 import {
     StyleSheet,
+    StatusBar,
     View,
     Text
 } from "react-native";
@@ -17,6 +18,7 @@ const styles = StyleSheet.create({
     header: {
         ...Typography.header,
         ...Typography.shadow,
+        // paddingTop: 30 //+ StatusBar.height,
     },
     title: {
         ...Typography.title,
